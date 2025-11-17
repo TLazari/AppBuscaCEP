@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Backgrounds -->
+    <color name="dark_background">#0B1F30</color>
+    <color name="background">#15293A</color>
+    <color name="popup">#214055</color>
+
+    <!-- Buttons / Rate gradients (use as start/end) -->
+    <color name="button_gradient_start">#14B780</color>
+    <color name="button_gradient_end">#28C398</color>
+    <color name="rate_gradient_start">#28C398</color>
+    <color name="rate_gradient_end">#2497F9</color>
+
+    <!-- Primary colors -->
+    <color name="green">#29BD98</color>
+    <color name="blue">#2497F9</color>
+    <color name="dark_gray">#466B8A</color>
+
+    <!-- Text / neutrals -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray_sky">#65BCA7</color>
+    <color name="light_gray">#9FBBCD</color>
+</resources>
