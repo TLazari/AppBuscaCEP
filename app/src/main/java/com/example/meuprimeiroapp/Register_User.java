@@ -49,7 +49,7 @@ public class Register_User extends AppCompatActivity {
                 editSenha.getText().toString()
         );
         if (usuario.ehValido()){
-            Toast.makeText(Register_User.this, "Salvando Usuario", Toast.LENGTH_LONG).show();
+            Toast.makeText(Register_User.this, "Salvando Usuario", Toast.LENGTH_SHORT).show();
 
             Bundle bundle = new Bundle();
             bundle.putSerializable("usuario", usuario);

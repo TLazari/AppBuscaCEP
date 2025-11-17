@@ -47,6 +47,7 @@
             android:layout_height="50dp"
             android:textSize="20sp"
             android:text="+"
+            android:textColor="@color/white"
             android:backgroundTint="@color/green"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:insetLeft="0dp"

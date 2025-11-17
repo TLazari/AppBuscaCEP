@@ -56,10 +56,8 @@ public class TelaPrincipal extends AppCompatActivity {
         Bundle dados = getIntent().getExtras();
         if (dados != null) {
             Usuario usuario = (Usuario) dados.getSerializable("usuario");
-            if (usuario == null) {
                 TextView txtMensagem = findViewById(R.id.tvNomeUsuario);
                 txtMensagem.setText(usuario.getNome());
-            }
         }
     }
     private void configurarClickItemHistorico() {
