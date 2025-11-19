@@ -2,6 +2,7 @@ package com.example.meuprimeiroapp;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,13 +12,16 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.meuprimeiroapp.model.Endereco;
 import com.example.meuprimeiroapp.model.Usuario;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class TelaPrincipal extends AppCompatActivity {
@@ -25,8 +29,10 @@ public class TelaPrincipal extends AppCompatActivity {
     private EditText editTextCEP;
     private Button btnPesquisar;
     private ListView listViewHistorico;
-    private ArrayList<Endereco> historicoBusca = new ArrayList<>();
+    private final ArrayList<Endereco> historicoBusca = new ArrayList<>();
     private ArrayAdapter<Endereco> adapter;
+    private boolean isEditMode = false;
+    private int editPosition = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +73,7 @@ public class TelaPrincipal extends AppCompatActivity {
             new AlertDialog.Builder(this)
                     .setTitle("Deseja editar ou atualizar este endereço?\n \n" + enderecoSelecionado.toString())
                     .setPositiveButton("Editar", (dialog, which) -> {
-                        // Função para preencher campos)
+                        fillEditFieldsForEdit(enderecoSelecionado, position);
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
@@ -88,15 +94,85 @@ public class TelaPrincipal extends AppCompatActivity {
         });
 
     }
-    private void configurarBotaoPesquisar() {
+    public void configurarBotaoPesquisar() {
         btnPesquisar.setOnClickListener(v -> {
-            String cep = editTextCEP.getText().toString().trim();
-            if (cep.length() == 8){
-                // new BuscaCepTask().execute(cep);
-            } else {
-                Toast.makeText(this, "CEP inválido. Insira 8 dígitos", Toast.LENGTH_SHORT).show();
-
+            if (validarCEP()) {
+                String cep = editTextCEP.getText().toString().trim();
+                BuscaCEP(cep);
             }
         });
+    }
+
+    private boolean validarCEP(){
+        String cep = editTextCEP.getText().toString().trim();
+        if (cep.length() == 7){
+            return true;
+        } else {
+            Toast.makeText(this, "CEP inválido. Insira 7 dígitos", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+    private void fillEditFieldsForEdit(Endereco selecionado, int position){
+        editTextCEP.setText(selecionado.getCep());
+        isEditMode = true;
+        editPosition = position;
+        btnPesquisar.setText("Atualizar");
+    }
+    private void BuscaCEP(String cep) {
+        new Thread(() -> {
+            try {
+                URL url = new URL("https://viacep.com.br/ws/" + cep + "/json/");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000);
+
+                connection.connect();
+                int responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder resposta = new StringBuilder();
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        resposta.append(line);
+                    }
+                    reader.close();
+
+                    JSONObject json = new JSONObject(resposta.toString());
+                    Endereco endereco = new Endereco(
+                        json.optString("cep"),
+                        json.optString("logradouro"),
+                        json.optString("bairro"),
+                        json.optString("localidade"),
+                        json.optString("uf")
+                    );
+
+                    runOnUiThread(() -> {
+                        adicionarEndereco(endereco);
+                    });
+                } else {
+                    runOnUiThread(() ->
+                        Toast.makeText(TelaPrincipal.this, "Erro na requisição: " + responseCode, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(TelaPrincipal.this, "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
+    private void adicionarEndereco(Endereco endereco) {
+        if (!isEditMode){
+            historicoBusca.add(endereco);
+        } else {
+            historicoBusca.set(editPosition, endereco);
+            btnPesquisar.setText("Pesquisar");
+            isEditMode = false;
+            editPosition = -1;
+        }
+        adapter.notifyDataSetChanged();
+        editTextCEP.setText("");
     }
 }
