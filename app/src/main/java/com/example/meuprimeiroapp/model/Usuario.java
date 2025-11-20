@@ -22,6 +22,12 @@ public class Usuario implements Serializable {
         this.senha = password;
     }
 
+    public Usuario(String teste, String mail, String number) {
+        this.nome = teste;
+        this.email = mail;
+        this.senha = number;
+    }
+
     public boolean ehValido() {
         return nome != null && !nome.isEmpty() &&
                 email != null && email.contains("@") &&

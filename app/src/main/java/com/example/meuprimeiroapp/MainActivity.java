@@ -20,6 +20,15 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        // Para fins de teste, ir diretamente para TelaPrincipal
+        Intent intent = new Intent(MainActivity.this, TelaPrincipal.class);
+        Usuario usuarioTeste = new Usuario("Teste", "teste@email.com", "123");
+        intent.putExtra("usuario", usuarioTeste);
+        startActivity(intent);
+        finish(); // Fecha MainActivity para não voltar
+
+        // Código original comentado para teste
+        /*
         EditText loginEditText = findViewById(R.id.editTextEmail);
         EditText passwordEditText = findViewById(R.id.editTextPassword);
         Button loginButton = findViewById(R.id.buttonLogin);
@@ -58,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        */
     }
     private void Logar(Usuario usuario){
         Toast.makeText(MainActivity.this, "Login realizado com sucesso", Toast.LENGTH_SHORT).show();

@@ -2,7 +2,6 @@ package com.example.meuprimeiroapp;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -96,32 +95,36 @@ public class TelaPrincipal extends AppCompatActivity {
     }
     public void configurarBotaoPesquisar() {
         btnPesquisar.setOnClickListener(v -> {
-            if (validarCEP()) {
-                String cep = editTextCEP.getText().toString().trim();
+            String cep = editTextCEP.getText().toString().trim();
+            if (validarCEP(cep)) {
                 BuscaCEP(cep);
             }
         });
     }
 
-    private boolean validarCEP(){
-        String cep = editTextCEP.getText().toString().trim();
-        if (cep.length() == 7){
+    private boolean validarCEP(String cep){
+        if (cep.length() == 8 || cep.length() == 9){
             return true;
         } else {
-            Toast.makeText(this, "CEP inválido. Insira 7 dígitos", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "CEP inválido. Insira 8 dígitos", Toast.LENGTH_SHORT).show();
             return false;
         }
     }
     private void fillEditFieldsForEdit(Endereco selecionado, int position){
-        editTextCEP.setText(selecionado.getCep());
+        String cepSemHifen = selecionado.getCep().replace("-", "");
+        editTextCEP.setText(cepSemHifen);
         isEditMode = true;
         editPosition = position;
         btnPesquisar.setText("Atualizar");
+
+
     }
     private void BuscaCEP(String cep) {
+        cep = cep.replaceAll("[^0-9]", "");
+        String finalCep = cep;
         new Thread(() -> {
             try {
-                URL url = new URL("https://viacep.com.br/ws/" + cep + "/json/");
+                URL url = new URL("https://viacep.com.br/ws/" + finalCep + "/json/");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(5000);
@@ -139,17 +142,23 @@ public class TelaPrincipal extends AppCompatActivity {
                     reader.close();
 
                     JSONObject json = new JSONObject(resposta.toString());
-                    Endereco endereco = new Endereco(
-                        json.optString("cep"),
-                        json.optString("logradouro"),
-                        json.optString("bairro"),
-                        json.optString("localidade"),
-                        json.optString("uf")
-                    );
+                    if (json.has("erro")) {
+                        runOnUiThread(() ->
+                            Toast.makeText(TelaPrincipal.this, "CEP não encontrado", Toast.LENGTH_SHORT).show()
+                        );
+                    } else {
+                        Endereco endereco = new Endereco(
+                            json.optString("cep"),
+                            json.optString("logradouro"),
+                            json.optString("bairro"),
+                            json.optString("localidade"),
+                            json.optString("uf")
+                        );
 
-                    runOnUiThread(() -> {
-                        adicionarEndereco(endereco);
-                    });
+                        runOnUiThread(() -> {
+                            adicionarEndereco(endereco);
+                        });
+                    }
                 } else {
                     runOnUiThread(() ->
                         Toast.makeText(TelaPrincipal.this, "Erro na requisição: " + responseCode, Toast.LENGTH_SHORT).show()
