@@ -1,6 +1,7 @@
 package com.example.meuprimeiroapp;
 
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -14,11 +15,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.meuprimeiroapp.model.Endereco;
 import com.example.meuprimeiroapp.model.Usuario;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,6 +36,8 @@ public class TelaPrincipal extends AppCompatActivity {
     private ArrayAdapter<Endereco> adapter;
     private boolean isEditMode = false;
     private int editPosition = -1;
+    private SharedPreferences prefs;
+    private Gson gson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +45,11 @@ public class TelaPrincipal extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_tela_principal);
 
+        prefs = getSharedPreferences("cep_prefs", MODE_PRIVATE);
+        gson = new Gson();
+
         inicializarComponentes();
+        loadHistorico();
         configurarListeners();
         carregarDadosUsuario();
 
@@ -86,6 +96,7 @@ public class TelaPrincipal extends AppCompatActivity {
                     .setPositiveButton("Excluir",(dialog, which) -> {
                         historicoBusca.remove(enderecoSelecionado);
                         adapter.notifyDataSetChanged();
+                        saveHistorico();
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
@@ -183,5 +194,23 @@ public class TelaPrincipal extends AppCompatActivity {
         }
         adapter.notifyDataSetChanged();
         editTextCEP.setText("");
+        saveHistorico();
+    }
+
+    private void saveHistorico() {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("historico", gson.toJson(historicoBusca));
+        editor.apply();
+    }
+
+    private void loadHistorico() {
+        String json = prefs.getString("historico", null);
+        if (json != null) {
+            Type type = new TypeToken<ArrayList<Endereco>>() {}.getType();
+            ArrayList<Endereco> listaHistorico = gson.fromJson(json, type);
+            historicoBusca.clear();
+            historicoBusca.addAll(listaHistorico);
+            adapter.notifyDataSetChanged();
+        }
     }
 }
